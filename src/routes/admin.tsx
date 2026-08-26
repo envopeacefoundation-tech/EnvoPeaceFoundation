@@ -1,21 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect, useCallback, type FormEvent } from "react";
-import {
-  LayoutDashboard,
-  TrendingUp,
-  Heart,
-  Mail,
-  Users,
-  LogOut,
-  Plus,
-  Pencil,
-  Trash2,
-  CheckCircle2,
-  Clock,
-  XCircle,
-  RefreshCw,
-  Shield,
-} from "lucide-react";
+import { LayoutDashboard, TrendingUp, Heart, Mail, Users, LogOut, Plus, Pencil, Trash2, CircleCheck as CheckCircle2, Clock, Circle as XCircle, RefreshCw, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
