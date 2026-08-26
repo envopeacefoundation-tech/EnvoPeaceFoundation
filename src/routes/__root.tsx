@@ -6,29 +6,33 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  useLocation,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
+import { Navbar } from "@/components/site/Navbar";
+import { Footer } from "@/components/site/Footer";
+import { Toaster } from "@/components/ui/sonner";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
+import { reportAppError } from "../lib/error-reporting";
 
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className="text-8xl font-serif font-bold text-primary/20">404</p>
+        <h1 className="mt-2 text-2xl font-serif font-bold text-foreground">
+          Page Not Found
+        </h1>
+        <p className="mt-3 text-base text-muted-foreground">
           The page you're looking for doesn't exist or has been moved.
         </p>
-        <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Go home
-          </Link>
-        </div>
+        <Link
+          to="/"
+          className="mt-8 inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary-deep"
+        >
+          Return Home
+        </Link>
       </div>
     </div>
   );
@@ -38,34 +42,34 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
   useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    reportAppError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
+        <h1 className="text-2xl font-serif font-bold text-foreground">
+          Something went wrong
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+        <p className="mt-3 text-base text-muted-foreground">
+          We encountered an unexpected error. Please try again.
         </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
           <button
             onClick={() => {
               router.invalidate();
               reset();
             }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary-deep"
           >
             Try again
           </button>
-          <a
-            href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+          <Link
+            to="/"
+            className="inline-flex items-center justify-center rounded-full border border-border bg-background px-6 py-3 text-sm font-semibold text-foreground transition-all hover:bg-secondary"
           >
             Go home
-          </a>
+          </Link>
         </div>
       </div>
     </div>
@@ -77,29 +81,23 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Envo Peace" },
-      { name: "description", content: "Envo Peace Hub is a website for the Envo Peace and Development Foundation, an NGO focused on community upliftment." },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Envo Peace" },
-      { property: "og:description", content: "Envo Peace Hub is a website for the Envo Peace and Development Foundation, an NGO focused on community upliftment." },
+      { title: "Envo Peace and Development Foundation" },
+      { name: "description", content: "Envo Peace and Development Foundation — a purpose-driven NGO restoring hope, building peace, and creating sustainable opportunities in underserved communities across Nigeria and beyond." },
+      { name: "author", content: "Envo Peace and Development Foundation" },
+      { property: "og:title", content: "Envo Peace and Development Foundation" },
+      { property: "og:description", content: "Restoring hope. Building peaceful communities. Join our mission to empower underserved communities through outreach, education, healthcare, and youth empowerment." },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
-      { name: "twitter:title", content: "Envo Peace" },
-      { name: "twitter:description", content: "Envo Peace Hub is a website for the Envo Peace and Development Foundation, an NGO focused on community upliftment." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a9c1746a-d1ad-45f7-a0ef-cfa158a55860/id-preview-b5c1beed--050c431b-6108-4e86-9b2d-3043ce1eb529.lovable.app-1780864602798.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a9c1746a-d1ad-45f7-a0ef-cfa158a55860/id-preview-b5c1beed--050c431b-6108-4e86-9b2d-3043ce1eb529.lovable.app-1780864602798.png" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Envo Peace and Development Foundation" },
+      { name: "twitter:description", content: "Restoring hope. Building peaceful communities." },
     ],
     links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
+      { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap",
       },
     ],
   }),
@@ -125,11 +123,19 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith("/admin");
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <div className="min-h-screen bg-background">
+        {!isAdmin && <Navbar />}
+        <main>
+          <Outlet />
+        </main>
+        {!isAdmin && <Footer />}
+        <Toaster richColors position="top-center" />
+      </div>
     </QueryClientProvider>
   );
 }

@@ -1,7 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft, CheckCircle2, Heart } from "lucide-react";
-import { Navbar } from "@/components/site/Navbar";
-import { Footer } from "@/components/site/Footer";
 import { Button } from "@/components/ui/button";
 import { getProgram, programs, type Program } from "@/components/site/programs-data";
 
@@ -49,15 +47,12 @@ function ProgramPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
-      <main>
-        <section className="relative isolate overflow-hidden pt-28 pb-16 md:pt-36 md:pb-20">
+      <section className="relative isolate overflow-hidden pt-28 pb-16 md:pt-36 md:pb-20">
           <div className="absolute inset-0 -z-10 bg-gradient-hero" />
           <div className="absolute inset-0 -z-10 bg-gradient-to-b from-transparent to-background" />
           <div className="mx-auto max-w-5xl px-4 md:px-8 text-primary-foreground">
             <Link
-              to="/"
-              hash="programs"
+              to="/programs"
               className="inline-flex items-center gap-2 text-sm font-medium text-primary-foreground/85 hover:text-primary-foreground"
             >
               <ArrowLeft className="h-4 w-4" /> All Programs
@@ -120,12 +115,12 @@ function ProgramPage() {
                   Every contribution directly supports families and communities through {program.title.toLowerCase()}.
                 </p>
                 <Button asChild variant="secondary" className="mt-5 w-full">
-                  <Link to="/" hash="donate">
+                  <Link to="/donate">
                     <Heart className="h-4 w-4" /> Donate Now
                   </Link>
                 </Button>
                 <Button asChild variant="outline" className="mt-2 w-full bg-transparent text-primary-foreground border-primary-foreground/30 hover:bg-primary-foreground/10 hover:text-primary-foreground">
-                  <Link to="/" hash="contact">Get Involved</Link>
+                  <Link to="/contact">Get Involved</Link>
                 </Button>
               </div>
             </aside>
@@ -158,8 +153,6 @@ function ProgramPage() {
             </div>
           </div>
         </section>
-      </main>
-      <Footer />
     </div>
   );
 }
