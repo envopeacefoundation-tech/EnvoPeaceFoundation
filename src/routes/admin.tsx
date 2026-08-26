@@ -20,20 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import {
-  subscribeToAuth,
-  signIn,
-  signOut,
-  fetchCollection,
-  updateDocument,
-  getFirebaseDb,
-  orderBy as fbOrderBy,
-  limit as fbLimit,
-  type User,
-  type DocumentData,
-  collection,
-  getDocs,
-} from "@/lib/firebase";
+import { supabase, subscribeToAuth, signIn, signOut, type User } from "@/lib/supabase";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin")({
@@ -65,6 +52,10 @@ function AdminPage() {
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
 
   useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setUser(data.session?.user ?? null);
+      setLoading(false);
+    });
     const unsub = subscribeToAuth((u) => {
       setUser(u);
       setLoading(false);
@@ -76,7 +67,8 @@ function AdminPage() {
     e.preventDefault();
     setLoginLoading(true);
     try {
-      await signIn(email, password);
+      const { error } = await signIn(email, password);
+      if (error) throw error;
       toast.success("Welcome back!");
     } catch (err: any) {
       toast.error(err.message || "Login failed");
@@ -219,7 +211,7 @@ function AdminPage() {
   );
 }
 
-// ── Dashboard Tab ──────────────────────────────────
+type Row = Record<string, any> & { id: string };
 
 function DashboardTab() {
   const [counts, setCounts] = useState({ donations: 0, volunteers: 0, contacts: 0 });
@@ -227,16 +219,15 @@ function DashboardTab() {
 
   const loadStats = useCallback(async () => {
     setLoading(true);
-    const db = getFirebaseDb();
-    const [dSnap, vSnap, cSnap] = await Promise.all([
-      getDocs(collection(db, "donations")),
-      getDocs(collection(db, "volunteer_inquiries")),
-      getDocs(collection(db, "contact_inquiries")),
+    const [dRes, vRes, cRes] = await Promise.all([
+      supabase.from("donations").select("*", { count: "exact", head: true }),
+      supabase.from("volunteer_inquiries").select("*", { count: "exact", head: true }),
+      supabase.from("contact_inquiries").select("*", { count: "exact", head: true }),
     ]);
     setCounts({
-      donations: dSnap.size,
-      volunteers: vSnap.size,
-      contacts: cSnap.size,
+      donations: dRes.count ?? 0,
+      volunteers: vRes.count ?? 0,
+      contacts: cRes.count ?? 0,
     });
     setLoading(false);
   }, []);
@@ -278,15 +269,17 @@ function DashboardTab() {
   );
 }
 
-// ── Programs Tab ───────────────────────────────────
-
 function ProgramsTab() {
-  const [programs, setPrograms] = useState<(DocumentData & { id: string })[]>([]);
+  const [programs, setPrograms] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchCollection("programs", fbOrderBy("sort_order")).then((data) => {
-      setPrograms(data);
+    supabase.from("programs").select("*").order("sort_order").then(({ data, error }) => {
+      if (error) {
+        toast.error("Failed to load programs.");
+      } else {
+        setPrograms((data as Row[]) ?? []);
+      }
       setLoading(false);
     });
   }, []);
@@ -310,7 +303,7 @@ function ProgramsTab() {
           </div>
         ) : programs.length === 0 ? (
           <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-soft">
-            <p className="text-sm text-muted-foreground">No programs found. Seed data from Firestore console.</p>
+            <p className="text-sm text-muted-foreground">No programs found.</p>
           </div>
         ) : (
           programs.map((p) => (
@@ -333,30 +326,32 @@ function ProgramsTab() {
   );
 }
 
-// ── Stats Tab ──────────────────────────────────────
-
 function StatsTab() {
-  const [stats, setStats] = useState<(DocumentData & { id: string })[]>([]);
+  const [stats, setStats] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [editId, setEditId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
 
   useEffect(() => {
-    fetchCollection("impact_stats", fbOrderBy("sort_order")).then((data) => {
-      setStats(data);
+    supabase.from("impact_stats").select("*").order("sort_order").then(({ data, error }) => {
+      if (error) {
+        toast.error("Failed to load stats.");
+      } else {
+        setStats((data as Row[]) ?? []);
+      }
       setLoading(false);
     });
   }, []);
 
   const handleSave = async (id: string) => {
-    try {
-      await updateDocument("impact_stats", id, { value: editValue });
-      setStats((prev) => prev.map((s) => (s.id === id ? { ...s, value: editValue } : s)));
-      setEditId(null);
-      toast.success("Stat updated!");
-    } catch {
+    const { error } = await supabase.from("impact_stats").update({ value: editValue }).eq("id", id);
+    if (error) {
       toast.error("Failed to update stat.");
+      return;
     }
+    setStats((prev) => prev.map((s) => (s.id === id ? { ...s, value: editValue } : s)));
+    setEditId(null);
+    toast.success("Stat updated!");
   };
 
   return (
@@ -399,15 +394,17 @@ function StatsTab() {
   );
 }
 
-// ── Donations Tab ──────────────────────────────────
-
 function DonationsTab() {
-  const [donations, setDonations] = useState<(DocumentData & { id: string })[]>([]);
+  const [donations, setDonations] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchCollection("donations", fbOrderBy("created_at"), fbLimit(50)).then((data) => {
-      setDonations(data);
+    supabase.from("donations").select("*").order("created_at", { ascending: false }).limit(50).then(({ data, error }) => {
+      if (error) {
+        toast.error("Failed to load donations.");
+      } else {
+        setDonations((data as Row[]) ?? []);
+      }
       setLoading(false);
     });
   }, []);
@@ -466,7 +463,7 @@ function DonationsTab() {
                     </span>
                   </td>
                   <td className="py-3 text-muted-foreground">
-                    {d.created_at?.toDate ? d.created_at.toDate().toLocaleDateString() : "\u2014"}
+                    {d.created_at ? new Date(d.created_at).toLocaleDateString() : "\u2014"}
                   </td>
                 </tr>
               ))}
@@ -478,21 +475,19 @@ function DonationsTab() {
   );
 }
 
-// ── Inquiries Tab ──────────────────────────────────
-
 function InquiriesTab() {
-  const [volunteers, setVolunteers] = useState<(DocumentData & { id: string })[]>([]);
-  const [contacts, setContacts] = useState<(DocumentData & { id: string })[]>([]);
+  const [volunteers, setVolunteers] = useState<Row[]>([]);
+  const [contacts, setContacts] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [subTab, setSubTab] = useState<"volunteers" | "contacts">("volunteers");
 
   useEffect(() => {
     Promise.all([
-      fetchCollection("volunteer_inquiries", fbOrderBy("created_at")),
-      fetchCollection("contact_inquiries", fbOrderBy("created_at")),
-    ]).then(([v, c]) => {
-      setVolunteers(v);
-      setContacts(c);
+      supabase.from("volunteer_inquiries").select("*").order("created_at", { ascending: false }),
+      supabase.from("contact_inquiries").select("*").order("created_at", { ascending: false }),
+    ]).then(([vRes, cRes]) => {
+      setVolunteers((vRes.data as Row[]) ?? []);
+      setContacts((cRes.data as Row[]) ?? []);
       setLoading(false);
     });
   }, []);
@@ -555,7 +550,7 @@ function InquiriesTab() {
                 )}
                 <p className="mt-2 text-xs text-muted-foreground">
                   Location: {v.location || "N/A"} &middot; Applied:{" "}
-                  {v.created_at?.toDate ? v.created_at.toDate().toLocaleDateString() : "\u2014"}
+                  {v.created_at ? new Date(v.created_at).toLocaleDateString() : "\u2014"}
                 </p>
               </div>
             ))
@@ -581,7 +576,7 @@ function InquiriesTab() {
               </div>
               <p className="mt-3 text-sm text-muted-foreground">{c.message}</p>
               <p className="mt-2 text-xs text-muted-foreground">
-                Received: {c.created_at?.toDate ? c.created_at.toDate().toLocaleDateString() : "\u2014"}
+                Received: {c.created_at ? new Date(c.created_at).toLocaleDateString() : "\u2014"}
               </p>
             </div>
           ))

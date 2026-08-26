@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -65,8 +66,20 @@ function ContactPage() {
   const [volunteerSubmitted, setVolunteerSubmitted] = useState(false);
   const [contactSubmitted, setContactSubmitted] = useState(false);
 
-  function handleContactSubmit(e: FormEvent<HTMLFormElement>) {
+  async function handleContactSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    const { error } = await supabase.from("contact_inquiries").insert({
+      name: formData.get("name"),
+      email: formData.get("email"),
+      phone: formData.get("phone"),
+      reason: inquiryType,
+      message: formData.get("message"),
+    });
+    if (error) {
+      toast.error("Failed to send message. Please try again.");
+      return;
+    }
     setContactSubmitted(true);
     toast.success("Message sent! We'll get back to you within 48 hours.");
     (e.target as HTMLFormElement).reset();
@@ -74,8 +87,21 @@ function ContactPage() {
     setTimeout(() => setContactSubmitted(false), 4000);
   }
 
-  function handleVolunteerSubmit(e: FormEvent<HTMLFormElement>) {
+  async function handleVolunteerSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    const { error } = await supabase.from("volunteer_inquiries").insert({
+      name: formData.get("name"),
+      email: formData.get("email"),
+      phone: formData.get("phone"),
+      location: formData.get("location"),
+      experience: formData.get("experience"),
+      motivation: formData.get("motivation"),
+    });
+    if (error) {
+      toast.error("Failed to submit application. Please try again.");
+      return;
+    }
     setVolunteerSubmitted(true);
     toast.success("Application received! We'll review and reach out soon.");
     (e.target as HTMLFormElement).reset();

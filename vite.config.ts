@@ -1,16 +1,16 @@
 import { defineConfig } from "vite";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import { nitro } from "nitro/vite";
+import tsconfigPaths from "vite-tsconfig-paths";
 
-// Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
 export default defineConfig({
-  tanstackStart: {
-    server: { entry: "server" },
-  },
-  vite: {
-    plugins: [
-      nitro({
-        preset: "vercel", // Forces Nitro to build for Vercel Serverless Functions instead of Cloudflare
-      }),
-    ],
-  },
+  plugins: [
+    tanstackStart({
+      server: { entry: "server" },
+    }),
+    nitro({
+      preset: "vercel",
+    }),
+    tsconfigPaths(),
+  ],
 });
